@@ -63,7 +63,6 @@ stop_app() ->
 
 load_empty_page() ->
     {ok, {_,_,Body}} = get_url("http://localhost:8080"),
-    {ok, {_,_,Body}} = get_url("http://localhost:8080/"),
     {match, _} = re:run(Body,"This is the podcast renamer."),
     {match, _} = re:run(Body,"Path: */").
 
