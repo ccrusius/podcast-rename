@@ -3,9 +3,6 @@
 A Podcast Renaming Application
 ==============================
 
-**This does not work yet. The returned page seems fine to me but iTunes does not
-handle it well. I think this has to do with xmerl's handling of CDATA sections.**
-
 Some podcasts have names with useless words in it (like "Podcast") which can't be
 removed in some environments (iTunes specifically). Changing the title is a simple
 matter replacing the `/rss/channel/title` element in the podcast's RSS feed XML, so

@@ -87,7 +87,8 @@ get_reply("/rename",Query) ->
     {_,Title}     = proplists:lookup("title",Query),
     {Header,Body} = wget(URL),
     NewBody       = process(binary_to_list(Body),Title),
-    {Header,NewBody};
+    NewHeader     = remove_content_length(Header),
+    {NewHeader,NewBody};
 
 get_reply(Path,Query) ->
     {
@@ -106,6 +107,11 @@ get_reply(Path,Query) ->
                 erlang:system_info(otp_release)
             ])
     }.
+
+remove_content_length(Header) ->
+    [PreHdr|[Rest|_]]=binary:split(Header,[<<"\r\nContent-Length:">>]),
+    [_|[PostHdr|_]]  =binary:split(Rest,[<<"\r\n">>]),
+    [PreHdr,<<"\r\n">>,PostHdr].
 
 %------------------------------------------------------------------------------
 %
