@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!DOCTYPE 
+service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
+<service_bundle type='manifest' name='podcast-rename'>
+  <service name='network/podcast-rename' type='service' version='1'>
+    <create_default_instance enabled='false' />
+    <single_instance />
+    <!-- Wait for network interfaces to be initialized.  -->
+    <dependency name='network' grouping='require_all' restart_on='error' type='service'>
+      <service_fmri value='svc:/milestone/network:default' />
+    </dependency>
+    <!-- Wait for all local filesystems to be mounted.  -->
+    <dependency name='filesystem-local' grouping='require_all' restart_on='none' type='service'>
+      <service_fmri value='svc:/system/filesystem/local:default' />
+    </dependency>
+    <exec_method type='method' name='start' exec='/opt/podcast_rename/bin/podcast_rename start' timeout_seconds='10'>
+      <method_context>
+        <method_environment>
+          <envvar name="HOME" value="/" />
+        </method_environment>
+      </method_context>
+    </exec_method>
+    <exec_method type='method' name='stop' exec='/opt/podcast_rename/bin/podcast_rename stop' timeout_seconds='60'>
+      <method_context>
+        <method_environment>
+          <envvar name="HOME" value="/" />
+        </method_environment>
+      </method_context>
+    </exec_method>
+    <template>
+      <common_name>
+        <loctext xml:lang='C'>Podcast Rename</loctext>
+      </common_name>
+      <documentation>
+        <doc_link name='github' uri='https://github.com/ccrusius/podcast-rename' />
+      </documentation>
+    </template>
+  </service>
+</service_bundle>

@@ -13,10 +13,6 @@ This is what the [podcast-rename](http://podcast-rename.appspot.com "podcast-ren
 application did, but it died on me one day. This project is my replacment for
 that app, which I have deployed for myself on my own server.
 
-This is a small project, so small that a large percentage of it is just rebar
-fluff. The place where work actually gets done is
-`src/podcast_rename_handler.erl`.
-
 Installing
 ==========
 
