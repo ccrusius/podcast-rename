@@ -109,9 +109,12 @@ get_reply(Path,Query) ->
     }.
 
 remove_content_length(Header) ->
-    [PreHdr|[Rest|_]]=binary:split(Header,[<<"\r\nContent-Length:">>]),
-    [_|[PostHdr|_]]  =binary:split(Rest,[<<"\r\n">>]),
-    [PreHdr,<<"\r\n">>,PostHdr].
+    case binary:match(Header,<<"\r\nContent-Length:">>) of
+        nomatch -> Header;
+        _ -> [PreHdr,Rest]=binary:split(Header,[<<"\r\nContent-Length:">>]),
+             [_,PostHdr]  =binary:split(Rest,[<<"\r\n">>]),
+             [PreHdr,<<"\r\n">>,PostHdr]
+    end.
 
 %------------------------------------------------------------------------------
 %
@@ -149,7 +152,7 @@ parse_query([ $? | QueryString ]) -> httpd:parse_query(QueryString);
 parse_query(_)                    -> [].
 
 wget(URL) ->
-    {ok,{Scheme,UserInfo,Host,Port,Path,Query}}=http_uri:parse(URL,[{fragment,false}]),
+    {ok,{_Scheme,_UserInfo,Host,Port,Path,Query}}=http_uri:parse(URL,[{fragment,false}]),
 
     Req = lists:flatten(io_lib:format(
         "GET ~s~s HTTP/1.0\r\nUser-Agent: curl/7.37.1\r\nHost: ~s\r\nAccept: */*\r\n\r\n",
@@ -173,7 +176,7 @@ assert_ok_response(Data) ->
     {ok,{http_response,_,200,"OK"},_}=erlang:decode_packet(http,Data,[]).
 
 split_response(Data) ->
-    [Hdr|[Body|_]]=binary:split(Data,[<<"\r\n\r\n">>]),
+    [Hdr,Body]=binary:split(Data,[<<"\r\n\r\n">>]),
     {Hdr,Body}.
 
 %% ===================================================================
@@ -205,17 +208,24 @@ load_unhandled_page() ->
     {match, _} = re:run(Body,"This is the podcast renamer."),
     {match, _} = re:run(Body,"Path: */unhandled").
 
-suggested_donation() ->
-    {ok, {_,_,Body}} = get_url("http://localhost:8080/rename?url=http://www.suggesteddonationpodcast.com/blog?format%3Drss&title=New%20Title"),
-    nomatch    = re:run(Body,"podcast - Suggested Donation"),
-    {match, _} = re:run(Body,"<title>New Title</title>").
+test_url(URL,Title) ->
+    {ok, {_,_,Body}} = get_url("http://localhost:8080/rename"
+                               ++"?url="++http_uri:encode(URL)
+                               ++"&title="++http_uri:encode(Title)),
+    {Doc,_}  = xmerl_scan:string(Body),
+    [#xmlElement{content=[#xmlText{value=Title}]}] = xmerl_xpath:string("/rss/channel/title",Doc).
 
 unit_test_() ->
     [
         fun() -> start_app() end,
         fun() -> load_empty_page() end,
         fun() -> load_unhandled_page() end,
-        fun() -> suggested_donation() end,
+        fun() -> test_url(
+                 "http://www.suggesteddonationpodcast.com/blog?format=rss",
+                 "New Title") end,
+        fun() -> test_url(
+                 "http://feeds.feedburner.com/dancarlin/history?format=xml",
+                 "New Title") end,
         fun() -> stop_app() end
     ].
 
