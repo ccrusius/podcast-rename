@@ -5,13 +5,7 @@
   {registered, []},
   {applications, [
                   kernel,
-                  stdlib,
-                  inets,
-                  crypto,
-                  ranch,
-                  cowlib,
-                  cowboy
+                  stdlib
                  ]},
-  {mod, { podcast_rename, []}},
-  {env, [{http_port, 8080}]}
+  {mod, { podcast_rename, []}}
  ]}.

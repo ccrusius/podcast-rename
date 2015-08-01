@@ -40,4 +40,7 @@ podcast application, add a podcast with the URL
 
 > `http://my.host:8080/rename?url=podcast_rss_url&title=new_title`
 
+Make sure to quote the podcast URL properly, for example replacing
+`=` by `%3D` and so on.
+
 You're done.
