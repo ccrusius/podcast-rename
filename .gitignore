@@ -1,0 +1,7 @@
+.rebar/
+deps/
+ebin/
+erl_crash.dump
+.*.swp
+.eunit/
+rel/podcast_rename

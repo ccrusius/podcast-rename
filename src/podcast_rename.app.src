@@ -1,0 +1,17 @@
+{application, podcast_rename,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  inets,
+                  crypto,
+                  ranch,
+                  cowlib,
+                  cowboy
+                 ]},
+  {mod, { podcast_rename, []}},
+  {env, [{http_port, 8080}]}
+ ]}.
