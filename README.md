@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ccrusius/podcast-rename.svg?branch=master)](https://travis-ci.org/ccrusius/podcast-rename)
+
 A Podcast Renaming Application
 ==============================
 
