@@ -2,7 +2,6 @@
 
 -behaviour(application).
 
-%% Application callbacks
 -export([start/0, start/2, stop/1, handle/1, loop/1]).
 
 -import(xmerl_scan,[string/1]).
@@ -15,9 +14,9 @@
 
 -define(C_ACCEPTORS, 100).
 
-%% ===================================================================
+%% =============================================================================
 %% Application callbacks
-%% ===================================================================
+%% =============================================================================
 
 start() ->
     spawn(?MODULE,loop,[start]),
@@ -29,10 +28,10 @@ start(_StartType, _StartArgs) ->
 stop(_State) ->
     ok.
 
-%% ===================================================================
+%% =============================================================================
 %% Simple HTTP server
 %% Similar ones all over the web. Spawns a process per request.
-%% ===================================================================
+%% =============================================================================
 loop(start) ->
     Port = port(),
     {ok,ListenSocket} = gen_tcp:listen(Port,[list,{active,false},{packet,http}]),
@@ -52,19 +51,19 @@ handle(Socket) ->
 
 send_reply(Sock,Headers,Body) ->
     gen_tcp:send(Sock,[
-        Headers,
-        "\r\n\r\n",
-        Body ]),
+                       Headers,
+                       "\r\n\r\n",
+                       Body ]),
     gen_tcp:close(Sock).
 
 send_unsupported_error(Sock) ->
     send_reply(Sock,
-        ["HTTP/1.1 405 Method Not Allowed\r\n"
-          ++ "Connection: close\r\n"
-          ++ "Allow: GET\r\n"
-          ++ "Content-Type: text/html; charset=UTF-8\r\n"
-          ++ "Cache-Control: no-cache"],
-        []).
+               ["HTTP/1.1 405 Method Not Allowed\r\n"
+                ++ "Connection: close\r\n"
+                ++ "Allow: GET\r\n"
+                ++ "Content-Type: text/html; charset=UTF-8\r\n"
+                ++ "Cache-Control: no-cache"],
+               []).
 
 port() ->
     case os:getenv("PORT") of
@@ -72,11 +71,9 @@ port() ->
         Other -> list_to_integer(Other)
     end.
 
-%------------------------------------------------------------------------------
-%
-% GET processing - either output info, or rename podcast
-%
-%------------------------------------------------------------------------------
+%% =============================================================================
+%% GET processing - either output info, or rename podcast
+%% =============================================================================
 handle_get(Socket,Req) ->
     {Path,Query} = parse_request(Req),
     {Headers,Body} = get_reply(Path,Query),
@@ -92,15 +89,15 @@ get_reply("/rename",Query) ->
 
 get_reply(Path,Query) ->
     {
-        ["HTTP/1.1 200 OK\r\n", "Connection: close"],
-        [
-          "This is the podcast renamer.\n",
-          "Unhandled request.\n",
-          "\nPath:   ",Path,
-          "\nQuery:  ",io_lib:format("~p",[Query]),
-          "\nPid:    ",io_lib:format("~p",[self()]),
-          "\nErlang: ",erlang:system_info(otp_release)
-        ]
+      ["HTTP/1.1 200 OK\r\n", "Connection: close"],
+      [
+       "This is the podcast renamer.\n",
+       "Unhandled request.\n",
+       "\nPath:   ",Path,
+       "\nQuery:  ",io_lib:format("~p",[Query]),
+       "\nPid:    ",io_lib:format("~p",[self()]),
+       "\nErlang: ",erlang:system_info(otp_release)
+      ]
     }.
 
 remove_content_length(Header) ->
@@ -111,16 +108,14 @@ remove_content_length(Header) ->
              [PreHdr,<<"\r\n">>,PostHdr]
     end.
 
-%------------------------------------------------------------------------------
-%
-% Replace the title.
-%
-% Overkill. Parse the XML document, recurse through it, replacing the right
-% <title> element with the new podcast title, translate XML back to text.
-%
-% SAX would be a better way to do this. Later.
-%
-%------------------------------------------------------------------------------
+%% =============================================================================
+%% Replace the title.
+%%
+%% Overkill. Parse the XML document, recurse through it, replacing the right
+%% <title> element with the new podcast title, translate XML back to text.
+%%
+%% SAX would be a better way to do this. Later.
+%% =============================================================================
 process(Body,Title) ->
     {ParsedBody,_} = xmerl_scan:string(Body),
     NewBody        = replaceTitle(ParsedBody,Title),
@@ -134,11 +129,9 @@ replaceTitle(#xmlElement{content=Content}=Element,Title) ->
     Element#xmlElement{content = lists:map(Fun,Content)};
 replaceTitle(Other,_Title) -> Other.
 
-%------------------------------------------------------------------------------
-%
-% Utility functions
-%
-%------------------------------------------------------------------------------
+%% =============================================================================
+%% Utility functions
+%% =============================================================================
 parse_request(Req) ->
     {RelPath, Rest} = lists:splitwith(fun(C) -> C =/= $? end,Req),
     {RelPath, parse_query(Rest)}.
@@ -149,10 +142,12 @@ parse_query(_)                    -> [].
 wget(URL) ->
     {ok,{_Scheme,_UserInfo,Host,Port,Path,Query}}=http_uri:parse(URL,[{fragment,false}]),
 
-    Req = lists:flatten(io_lib:format(
-        "GET ~s~s HTTP/1.0\r\nUser-Agent: curl/7.37.1\r\nHost: ~s\r\nAccept: */*\r\n\r\n",
-        [Path,Query,Host])),
-
+    Req = [
+           "GET ",Path,Query," HTTP/1.0\r\n",
+           "User-Agent: curl/7.37.1\r\n",
+           "Host: ",Host,"\r\n",
+           "Accept: */*\r\n\r\n"
+          ],
     {ok,Socket} = gen_tcp:connect(Host,Port,[binary,{packet,raw}]),
     ok = gen_tcp:send(Socket,Req),
     {ok,Data} = receive_data(Socket,[]),
@@ -174,54 +169,47 @@ split_response(Data) ->
     [Hdr,Body]=binary:split(Data,[<<"\r\n\r\n">>]),
     {Hdr,Body}.
 
-%% ===================================================================
+%% =============================================================================
 %% Tests
-%% ===================================================================
+%% =============================================================================
 -ifdef(TEST).
 
-get_url(URL) ->
-    httpc:request(URL).
-
 start_app() ->
-    ok = application:start(inets),
     ok = application:start(podcast_rename),
     ?assertNot(undefined == whereis(podcast_rename_sup)).
 
 stop_app() ->
-    % Stopping only podcast_rename does not work because httpc keeps
-    % open connections and errors out randomly.
-    %ok = application:stop(inets),
     ok = application:stop(podcast_rename).
 
 load_empty_page() ->
-    {ok, {_,_,Body}} = get_url("http://localhost:8080"),
-    {match, _} = re:run(Body,"This is the podcast renamer."),
-    {match, _} = re:run(Body,"Path: */").
+    {_Header,Body} = wget("http://localhost:8080"),
+    ?assertNot(nomatch == binary:match(Body,<<"This is the podcast renamer.">>)),
+    ?assertNot(nomatch == binary:match(Body,<<"Path:   /">>)).
 
 load_unhandled_page() ->
-    {ok, {_,_,Body}} = get_url("http://localhost:8080/unhandled"),
-    {match, _} = re:run(Body,"This is the podcast renamer."),
-    {match, _} = re:run(Body,"Path: */unhandled").
+    {_Header,Body} = wget("http://localhost:8080/unhandled"),
+    ?assertNot(nomatch == binary:match(Body,<<"This is the podcast renamer.">>)),
+    ?assertNot(nomatch == binary:match(Body,<<"Path:   /unhandled">>)).
 
 test_url(URL,Title) ->
-    {ok, {_,_,Body}} = get_url("http://localhost:8080/rename"
-                               ++"?url="++http_uri:encode(URL)
-                               ++"&title="++http_uri:encode(Title)),
-    {Doc,_}  = xmerl_scan:string(Body),
+    {_Header,Body} = wget("http://localhost:8080/rename"
+                          ++"?url="++http_uri:encode(URL)
+                          ++"&title="++http_uri:encode(Title)),
+    {Doc,_}  = xmerl_scan:string(binary_to_list(Body)),
     [#xmlElement{content=[#xmlText{value=Title}]}] = xmerl_xpath:string("/rss/channel/title",Doc).
 
 unit_test_() ->
     [
-        fun() -> start_app() end,
-        fun() -> load_empty_page() end,
-        fun() -> load_unhandled_page() end,
-        fun() -> test_url(
-                 "http://www.suggesteddonationpodcast.com/blog?format=rss",
-                 "New Title") end,
-        fun() -> test_url(
-                 "http://feeds.feedburner.com/dancarlin/history?format=xml",
-                 "New Title") end,
-        fun() -> stop_app() end
+     fun() -> start_app() end,
+     fun() -> load_empty_page() end,
+     fun() -> load_unhandled_page() end,
+     fun() -> test_url(
+                "http://www.suggesteddonationpodcast.com/blog?format=rss",
+                "New Title") end,
+     fun() -> test_url(
+                "http://feeds.feedburner.com/dancarlin/history?format=xml",
+                "New Title") end,
+     fun() -> stop_app() end
     ].
 
 -endif.
