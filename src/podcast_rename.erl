@@ -58,13 +58,13 @@ send_reply(Sock,Headers,Body) ->
     gen_tcp:close(Sock).
 
 send_unsupported_error(Sock) ->
-    gen_tcp:send(Sock,
-        "HTTP/1.1 405 Method Not Allowed\r\n"
-        ++ "Connection: close\r\n"
-        ++ "Allow: GET\r\n"
-        ++ "Content-Type: text/html; charset=UTF-8\r\n"
-        ++ "Cache-Control: no-cache\r\n\r\n"),
-    gen_tcp:close(Sock).
+    send_reply(Sock,
+        ["HTTP/1.1 405 Method Not Allowed\r\n"
+          ++ "Connection: close\r\n"
+          ++ "Allow: GET\r\n"
+          ++ "Content-Type: text/html; charset=UTF-8\r\n"
+          ++ "Cache-Control: no-cache"],
+        []).
 
 port() ->
     case os:getenv("PORT") of
@@ -93,19 +93,14 @@ get_reply("/rename",Query) ->
 get_reply(Path,Query) ->
     {
         ["HTTP/1.1 200 OK\r\n", "Connection: close"],
-        io_lib:format(
-            "This is the podcast renamer.~n"
-            ++ "Unhandled request.~n~n"
-            ++ "Path:   ~s~n"
-            ++ "Query:  ~p~n"
-            ++ "Pid:    ~p~n"
-            ++ "Erlang: ~s~n",
-            [
-                Path,
-                Query,
-                self(),
-                erlang:system_info(otp_release)
-            ])
+        [
+          "This is the podcast renamer.\n",
+          "Unhandled request.\n",
+          "\nPath:   ",Path,
+          "\nQuery:  ",io_lib:format("~p",[Query]),
+          "\nPid:    ",io_lib:format("~p",[self()]),
+          "\nErlang: ",erlang:system_info(otp_release)
+        ]
     }.
 
 remove_content_length(Header) ->
