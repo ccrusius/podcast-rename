@@ -34,7 +34,8 @@ stop(_State) ->
 %% =============================================================================
 loop(start) ->
     Port = port(),
-    {ok,ListenSocket} = gen_tcp:listen(Port,[list,{active,false},{packet,http}]),
+    ListenOpts = [list,{active,false},{packet,http},{reuseaddr,true}],
+    {ok,ListenSocket} = gen_tcp:listen(Port,ListenOpts),
     loop(ListenSocket);
 loop(ListenSocket) ->
     {ok,Socket} = gen_tcp:accept(ListenSocket),
@@ -209,6 +210,10 @@ unit_test_() ->
      fun() -> test_url(
                 "http://feeds.feedburner.com/dancarlin/history?format=xml",
                 "New Title") end,
+     fun() -> stop_app() end,
+     %% Restarting the application immediately exercises the reuseaddr option.
+     fun() -> start_app() end,
+     fun() -> load_empty_page() end,
      fun() -> stop_app() end
     ].
 
