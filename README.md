@@ -5,8 +5,8 @@ A Podcast Renaming Application
 
 Some podcasts have names with useless words in it (like "Podcast") which can't be
 removed in some environments (iTunes specifically). Changing the title is a simple
-matter replacing the `/rss/channel/title` element in the podcast's RSS feed XML, so
-it is simple to do if you can intercept the XML before handling it over to your
+matter of replacing the `/rss/channel/title` element in the podcast's RSS feed, so
+it is simple to do if you can intercept the feed's XML before handing it over to your
 podcast application.
 
 This is what the [podcast-rename](http://podcast-rename.appspot.com "podcast-rename")
@@ -31,10 +31,10 @@ can reach it from anywhere.
 Using
 =====
 
-Find the RSS link URL for your podcast. Decide on the new title. On your
+Find the feed URL for your podcast. Decide on the new title. On your
 podcast application, add a podcast with the URL
 
-> `http://my.host:8080/rename?url=podcast_rss_url&title=new_title`
+> `http://my.host:8080/rename?url=podcast_feed_url&title=new_title`
 
 Make sure to quote the podcast URL properly, for example replacing
 `=` by `%3D` and so on.
