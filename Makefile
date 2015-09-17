@@ -6,3 +6,7 @@ eunit:
 
 release:
 	./rebar get-deps compile generate
+
+clean:
+	./rebar clean
+	rm -rf rel/podcast_rename
