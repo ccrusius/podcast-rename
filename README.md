@@ -40,3 +40,5 @@ Make sure to quote the podcast URL properly, for example replacing
 `=` by `%3D` and so on.
 
 You're done.
+
+Should you need detailed instructions on Windows platform, please refer to this page
