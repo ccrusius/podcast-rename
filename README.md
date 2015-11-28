@@ -41,4 +41,4 @@ Make sure to quote the podcast URL properly, for example replacing
 
 You're done.
 
-Should you need detailed instructions on Windows platform, please refer to this page
+Should you need detailed instructions on Windows platform, please refer to [this page](podcast_rename_win.md)
