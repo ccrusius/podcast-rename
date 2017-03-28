@@ -109,22 +109,18 @@ remove_content_length(Header) ->
              [PreHdr,<<"\r\n">>,PostHdr]
     end.
 
-%% =============================================================================
+%% ============================================================================
 %% Replace the title.
-%%
-%% Overkill. Parse the XML document, recurse through it, replacing the right
-%% <title> element with the new podcast title, translate XML back to text.
-%%
-%% SAX would be a better way to do this. Later.
-%% =============================================================================
+%% ============================================================================
 process(Body,Title) ->
     {ParsedBody,_} = xmerl_scan:string(Body),
     NewBody        = replaceTitle(ParsedBody,Title),
     ExportedBody   = xmerl:export([NewBody],xmerl_xml),
     unicode:characters_to_binary(lists:flatten(ExportedBody)).
 
-replaceTitle(#xmlText{parents=[{title,_},{channel,_},{rss,_}]}=Element,Title) ->
-    Element#xmlText{value=Title};
+replaceTitle(#xmlElement{name=title, parents=[{channel,_},{rss,_}]}=Element,
+             Title) ->
+    Element#xmlElement{content = [#xmlText{value=Title}]};
 replaceTitle(#xmlElement{content=Content}=Element,Title) ->
     Fun = fun(E) -> replaceTitle(E,Title) end,
     Element#xmlElement{content = lists:map(Fun,Content)};
@@ -209,6 +205,9 @@ unit_test_() ->
                 "New Title") end,
      fun() -> test_url(
                 "http://feeds.feedburner.com/dancarlin/history?format=xml",
+                "New Title") end,
+     fun() -> test_url(
+                "http://www.johndalton.me/feed/",
                 "New Title") end,
      fun() -> stop_app() end,
      %% Restarting the application immediately exercises the reuseaddr option.
